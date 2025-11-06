@@ -1,0 +1,624 @@
+/* NiiViewer Component Styles */
+.nii-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
+  padding-right: 4px;
+  container-type: inline-size;
+  container-name: nii-viewer;
+}
+
+.nii-viewer__header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  min-height: 24px;
+}
+
+.nii-viewer__content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: visible;
+}
+
+/* 確保所有子元素的順序：Threshold/XYZ (order: 1) → 圖片 (order: 2) → 錯誤訊息也在圖片位置 */
+.nii-viewer__content > .rounded-lg {
+  order: 2;
+}
+
+.nii-viewer__bottom-controls {
+  margin-top: auto;
+  flex-shrink: 0;
+  order: 3;
+}
+
+/* 共用的容器樣式 */
+.nii-viewer__section,
+.nii-viewer__section-compact {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.nii-viewer__section {
+  padding: 12px;
+}
+
+.nii-viewer__section-compact {
+  padding: 10px;
+  order: 1;
+}
+
+.nii-viewer__download-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.nii-viewer__controls-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  flex-wrap: wrap;
+  max-width: fit-content;
+  width: auto;
+}
+
+.nii-overlay-slider {
+  width: 120px;
+  min-width: 80px;
+}
+
+.nii-viewer__download-btn {
+  padding: 8px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nii-viewer__download-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+.nii-threshold-btn {
+  padding: 6px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: white;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nii-viewer__coordinate-inputs {
+  margin-top: 16px;
+  order: 1;
+}
+
+.nii-threshold-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.nii-threshold-btn--active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.nii-threshold-btn--active:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.nii-viewer__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nii-viewer__control-group {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* 根據容器寬度調整控制項佈局 */
+@container nii-viewer (max-width: 450px) {
+  .nii-viewer__control-group {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .nii-viewer__value {
+    text-align: left;
+  }
+}
+
+@container nii-viewer (min-width: 451px) and (max-width: 600px) {
+  .nii-viewer__control-group {
+    grid-template-columns: 90px 1fr auto;
+    gap: 8px;
+  }
+}
+
+.nii-viewer__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.nii-viewer__input,
+.nii-viewer__select {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s ease;
+  background: white;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.nii-viewer__input:focus,
+.nii-viewer__select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.nii-viewer__value {
+  font-size: 12px;
+  color: #64748b;
+  font-family: 'Monaco', 'Courier New', monospace;
+  min-width: 60px;
+  text-align: right;
+}
+
+.nii-viewer__checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nii-viewer__checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.nii-viewer__button {
+  padding: 10px 20px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.nii-viewer__button:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.nii-viewer__button:active {
+  transform: translateY(0);
+}
+
+.nii-viewer__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nii-viewer__sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.nii-viewer__slider-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 70px;
+  align-items: center;
+  gap: 10px;
+}
+
+@container nii-viewer (max-width: 400px) {
+  .nii-viewer__slider-row {
+    grid-template-columns: 60px 1fr 60px;
+    gap: 8px;
+  }
+}
+
+.nii-viewer__slider-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.nii-viewer__slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #cbd5e1;
+}
+
+.nii-viewer__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2563eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nii-viewer__slider::-webkit-slider-thumb:hover {
+  background: #1d4ed8;
+  transform: scale(1.1);
+}
+
+.nii-viewer__slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2563eb;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.nii-viewer__slider::-moz-range-thumb:hover {
+  background: #1d4ed8;
+  transform: scale(1.1);
+}
+
+.nii-viewer__slider-value {
+  font-size: 12px;
+  color: #0f172a;
+  font-family: 'Monaco', 'Courier New', monospace;
+  text-align: right;
+  font-weight: 600;
+}
+
+.nii-viewer__canvas-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 10px;
+  flex-shrink: 0;
+  width: 100%;
+  max-height: 400px;
+  order: 2;
+  margin-left: auto;
+  margin-right: auto;
+  justify-self: center;
+  align-self: center;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+@media (min-width: 901px) {
+  .nii-viewer__canvas-container {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+.nii-viewer__canvas-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0; /* 允許項目縮小 */
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.nii-viewer__canvas-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  width: 100%;
+}
+
+.nii-viewer__canvas-wrapper {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.nii-viewer__canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+  object-fit: contain;
+}
+
+.nii-viewer__error,
+.nii-viewer__loading {
+  padding: 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 13px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.nii-viewer__error {
+  color: #991b1b;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .nii-viewer__control-group {
+    grid-template-columns: 1fr;
+  }
+  
+  .nii-viewer__value {
+    text-align: left;
+  }
+  
+  .nii-viewer__slider-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .nii-viewer__slider-label {
+    text-align: left;
+  }
+  
+  .nii-viewer__slider-value {
+    text-align: left;
+  }
+  
+  .nii-viewer__section,
+  .nii-viewer__section-compact {
+    padding: 8px;
+  }
+  
+  .nii-viewer {
+    gap: 10px;
+  }
+}
+
+/* 處理非常窄的寬度 (例如拖動面板到很窄) */
+@media (max-width: 500px) {
+  .nii-viewer__canvas-wrapper {
+    max-height: 250px;
+  }
+  
+  .nii-viewer__canvas-label {
+    font-size: 10px;
+  }
+}
+
+/* 通用輸入框樣式類 */
+.nii-input-small {
+  width: 52px !important;
+  min-width: 50px !important;
+  max-width: 100%;
+}
+
+.nii-input-medium {
+  width: 80px;
+  min-width: 60px;
+  max-width: 100%;
+}
+
+.nii-input-fwhm {
+  width: 80px !important;
+  min-width: 50px !important;
+  max-width: 100%;
+}
+
+/* 使用容器查詢來響應寬度變化 */
+@container nii-viewer (max-width: 520px) {
+  .nii-input-small,
+  .nii-input-medium {
+    width: 100%;
+    min-width: 0;
+  }
+  
+  .nii-viewer__section,
+  .nii-viewer__section-compact {
+    padding: 6px;
+  }
+  
+  .nii-viewer__controls-row {
+    max-width: 240px;
+  }
+}
+
+/* Dark Mode Overrides */
+:root.dark-mode .nii-viewer__section,
+:root.dark-mode .nii-viewer__section-compact {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:root.dark-mode .nii-viewer__label {
+  color: #cbd5e1;
+}
+
+:root.dark-mode .nii-input-small,
+:root.dark-mode .nii-input-medium {
+  background: #0f172a;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+:root.dark-mode .nii-input-small:focus,
+:root.dark-mode .nii-input-medium:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+:root.dark-mode .nii-select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+:root.dark-mode .nii-select:focus {
+  border-color: #3b82f6;
+}
+
+:root.dark-mode .nii-button {
+  background: #1e293b;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+:root.dark-mode .nii-button:hover:not(:disabled) {
+  background: #334155;
+  border-color: #64748b;
+  color: #f1f5f9;
+}
+
+:root.dark-mode .nii-button:active:not(:disabled) {
+  background: #475569;
+}
+
+:root.dark-mode .nii-button--primary {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+:root.dark-mode .nii-button--primary:hover:not(:disabled) {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+:root.dark-mode .nii-button--primary:active:not(:disabled) {
+  background: #1d4ed8;
+}
+
+:root.dark-mode .nii-viewer__canvas-wrapper {
+  background: #0f172a;
+}
+
+:root.dark-mode .nii-viewer__canvas-label {
+  color: #cbd5e1;
+}
+
+:root.dark-mode .nii-viewer__error {
+  background: #991b1b;
+  border-color: #7f1d1d;
+  color: #fecaca;
+}
+
+:root.dark-mode .nii-viewer__loading {
+  color: #cbd5e1;
+}
+
+:root.dark-mode .nii-viewer__skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+}
+
+:root.dark-mode .nii-viewer__download-btn {
+  background: #1e293b;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+:root.dark-mode .nii-viewer__download-btn:hover {
+  background: #334155;
+  border-color: #3b82f6;
+  color: #60a5fa;
+}
+
+:root.dark-mode .nii-overlay-slider {
+  background: #475569;
+}
+
+:root.dark-mode .nii-overlay-slider::-webkit-slider-thumb {
+  background: #3b82f6;
+}
+
+:root.dark-mode .nii-overlay-slider::-moz-range-thumb {
+  background: #3b82f6;
+}
+
+:root.dark-mode .nii-viewer__controls-row {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:root.dark-mode .nii-threshold-btn {
+  background: #0f172a;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+:root.dark-mode .nii-threshold-btn:hover {
+  background: #1e293b;
+  border-color: #64748b;
+}
+
+:root.dark-mode .nii-threshold-btn--active {
+  background: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
+:root.dark-mode .nii-threshold-btn--active:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}

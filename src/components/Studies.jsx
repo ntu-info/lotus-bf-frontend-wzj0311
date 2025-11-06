@@ -1,5 +1,6 @@
 import { API_BASE } from '../api'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
+import './Studies.css'
 
 function classNames (...xs) { return xs.filter(Boolean).join(' ') }
 
@@ -11,8 +12,80 @@ export function Studies ({ query }) {
   const [sortDir, setSortDir] = useState('desc') // 'asc' | 'desc'
   const [page, setPage] = useState(1)
   const pageSize = 20
+  const tableWrapperRef = useRef(null)
+  const [bookmarks, setBookmarks] = useState([])
+  const [viewMode, setViewMode] = useState('search') // 'search' | 'bookmarks'
+
+  // 載入書籤
+  useEffect(() => {
+    const saved = localStorage.getItem('studiesBookmarks')
+    if (saved) {
+      try {
+        setBookmarks(JSON.parse(saved))
+      } catch (e) {
+        console.error('Failed to parse bookmarks:', e)
+      }
+    }
+  }, [])
+
+  // 切換書籤
+  const toggleBookmark = (study) => {
+    const isBookmarked = bookmarks.some(b => b.id === study.id)
+    let newBookmarks
+    if (isBookmarked) {
+      newBookmarks = bookmarks.filter(b => b.id !== study.id)
+    } else {
+      newBookmarks = [...bookmarks, study]
+    }
+    setBookmarks(newBookmarks)
+    localStorage.setItem('studiesBookmarks', JSON.stringify(newBookmarks))
+  }
+
+  const isBookmarked = (studyId) => {
+    return bookmarks.some(b => b.id === studyId)
+  }
+
+  // 匯出書籤為 CSV
+  const exportBookmarksAsCSV = () => {
+    if (bookmarks.length === 0) {
+      alert('No bookmarks to export')
+      return
+    }
+
+    const headers = ['ID', 'Year', 'Journal', 'Title', 'Authors']
+    const csvContent = [
+      headers.join(','),
+      ...bookmarks.map(b => [
+        b.id || '',
+        b.year || '',
+        `"${(b.journal || '').replace(/"/g, '""')}"`,
+        `"${(b.title || '').replace(/"/g, '""')}"`,
+        `"${(b.authors || '').replace(/"/g, '""')}"`
+      ].join(','))
+    ].join('\n')
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `lotus-bf-bookmarks-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  // 切換查看模式時重置頁碼
+  useEffect(() => { setPage(1) }, [viewMode])
 
   useEffect(() => { setPage(1) }, [query])
+
+  // 換頁時滾動到頂端
+  useEffect(() => {
+    if (tableWrapperRef.current) {
+      tableWrapperRef.current.scrollTop = 0
+    }
+  }, [page])
 
   useEffect(() => {
     if (!query) return
@@ -46,7 +119,8 @@ export function Studies ({ query }) {
   }
 
   const sorted = useMemo(() => {
-    const arr = [...rows]
+    // 根據查看模式選擇資料來源
+    const arr = viewMode === 'bookmarks' ? [...bookmarks] : [...rows]
     const dir = sortDir === 'asc' ? 1 : -1
     arr.sort((a, b) => {
       const A = a?.[sortKey]
@@ -56,50 +130,146 @@ export function Studies ({ query }) {
       return String(A || '').localeCompare(String(B || ''), 'en') * dir
     })
     return arr
-  }, [rows, sortKey, sortDir])
+  }, [rows, bookmarks, viewMode, sortKey, sortDir])
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize))
   const pageRows = sorted.slice((page - 1) * pageSize, page * pageSize)
 
   return (
-    <div className='flex flex-col rounded-2xl border'>
-      <div className='flex items-center justify-between p-3'>
-        <div className='card__title'>Studies</div>
-        <div className='text-sm text-gray-500'>
-           {/* {query ? `Query: ${query}` : 'Query: (empty)'} */}
-        </div>
-      </div>
-
-
-      {query && loading && (
-        <div className='grid gap-3 p-3'>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className='h-10 animate-pulse rounded-lg bg-gray-100' />
-          ))}
-        </div>
-      )}
-
-      {query && err && (
-        <div className='mx-3 mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
-          {err}
-        </div>
-      )}
-
-      {query && !loading && !err && (
-        <div className='overflow-auto'>
-          <table className='min-w-full text-sm'>
-            <thead className='sticky top-0 bg-gray-50 text-left'>
+    <div className="studies">
+      {!query && (
+        <div className="studies__table-wrapper">
+          <table className="studies__table">
+            <thead>
               <tr>
+                <th className="studies__table-bookmark-col">
+                  <span className="studies__table-sort">★</span>
+                </th>
                 {[
                   { key: 'year', label: 'Year' },
                   { key: 'journal', label: 'Journal' },
                   { key: 'title', label: 'Title' },
                   { key: 'authors', label: 'Authors' }
                 ].map(({ key, label }) => (
-                  <th key={key} className='cursor-pointer px-3 py-2 font-semibold' onClick={() => changeSort(key)}>
-                    <span className='inline-flex items-center gap-2'>
+                  <th key={key}>
+                    <span className="studies__table-sort">
                       {label}
-                      <span className='text-xs text-gray-500'>{sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : ''}</span>
+                      <span className="studies__table-sort-icon"></span>
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colSpan={5} className="studies__table-empty">No data</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {query && loading && (
+        <div className="studies__loading">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="studies__skeleton-row" />
+          ))}
+        </div>
+      )}
+
+      {query && err && (
+        <div className="studies__error">
+          {err}
+        </div>
+      )}
+
+      {query && !loading && !err && (
+        <>
+          <div className="studies__controls">
+            <div className="studies__view-toggle">
+              <button
+                className={`studies__view-btn ${viewMode === 'search' ? 'studies__view-btn--active' : ''}`}
+                onClick={() => setViewMode('search')}
+                title="Search Results"
+              >
+                🔍
+              </button>
+              <button
+                className={`studies__view-btn ${viewMode === 'bookmarks' ? 'studies__view-btn--active' : ''}`}
+                onClick={() => setViewMode('bookmarks')}
+                title={`Bookmarks (${bookmarks.length})`}
+              >
+                ⭐
+              </button>
+              {viewMode === 'bookmarks' && bookmarks.length > 0 && (
+                <button
+                  className="studies__export-btn"
+                  onClick={exportBookmarksAsCSV}
+                  title="Export bookmarks as CSV"
+                >
+                  ⬇️
+                </button>
+              )}
+            </div>
+            <div className="studies__pagination-section">
+              <div className="studies__pagination-info-text">
+                <span className="studies__pagination-info studies__pagination-info--highlight">{sorted.length}</span> results | {page}/{totalPages}
+              </div>
+              <div className="studies__pagination">
+                <button 
+                  disabled={page <= 1} 
+                  onClick={() => setPage(1)} 
+                  className="studies__pagination-btn"
+                  title="First page"
+                >
+                  &lt;&lt;
+                </button>
+                <button 
+                  disabled={page <= 1} 
+                  onClick={() => setPage(p => Math.max(1, p - 1))} 
+                  className="studies__pagination-btn"
+                  title="Previous"
+                >
+                  &lt;
+                </button>
+                <button 
+                  disabled={page >= totalPages} 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                  className="studies__pagination-btn"
+                  title="Next"
+                >
+                  &gt;
+                </button>
+                <button 
+                  disabled={page >= totalPages} 
+                  onClick={() => setPage(totalPages)} 
+                  className="studies__pagination-btn"
+                  title="Last page"
+                >
+                  &gt;&gt;
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="studies__table-wrapper" ref={tableWrapperRef}>
+          <table className="studies__table">
+            <thead>
+              <tr>
+                <th className="studies__table-bookmark-col">
+                  <span className="studies__table-sort">★</span>
+                </th>
+                {[
+                  { key: 'year', label: 'Year' },
+                  { key: 'journal', label: 'Journal' },
+                  { key: 'title', label: 'Title' },
+                  { key: 'authors', label: 'Authors' }
+                ].map(({ key, label }) => (
+                  <th key={key} onClick={() => changeSort(key)}>
+                    <span className="studies__table-sort">
+                      {label}
+                      <span className="studies__table-sort-icon">
+                        {sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                      </span>
                     </span>
                   </th>
                 ))}
@@ -107,32 +277,58 @@ export function Studies ({ query }) {
             </thead>
             <tbody>
               {pageRows.length === 0 ? (
-                <tr><td colSpan={4} className='px-3 py-4 text-gray-500'>No data</td></tr>
+                <tr>
+                  <td colSpan={5} className="studies__table-empty">
+                    {viewMode === 'bookmarks' ? 'No bookmarks' : 'No data'}
+                  </td>
+                </tr>
               ) : (
                 pageRows.map((r, i) => (
-                  <tr key={i} className={classNames(i % 2 ? 'bg-white' : 'bg-gray-50')}>
-                    <td className='whitespace-nowrap px-3 py-2 align-top'>{r.year ?? ''}</td>
-                    <td className='px-3 py-2 align-top'>{r.journal || ''}</td>
-                    <td className='max-w-[540px] px-3 py-2 align-top'><div className='truncate' title={r.title}>{r.title || ''}</div></td>
-                    <td className='px-3 py-2 align-top'>{r.authors || ''}</td>
+                  <tr key={i}>
+                    <td className="studies__table-bookmark-col">
+                      <button
+                        className={`studies__bookmark-btn ${isBookmarked(r.id) ? 'studies__bookmark-btn--active' : ''}`}
+                        onClick={() => toggleBookmark(r)}
+                        title={isBookmarked(r.id) ? 'Remove bookmark' : 'Add bookmark'}
+                      >
+                        {isBookmarked(r.id) ? '★' : '☆'}
+                      </button>
+                    </td>
+                    <td>{r.year ?? ''}</td>
+                    <td>
+                      <div className="studies__table-journal" title={r.journal}>
+                        {r.journal || ''}
+                      </div>
+                    </td>
+                    <td className="studies__table-title">
+                      {r.id ? (
+                        <a 
+                          href={`https://pubmed.ncbi.nlm.nih.gov/${r.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="studies__table-title-link"
+                          title={r.title}
+                        >
+                          {r.title || ''}
+                        </a>
+                      ) : (
+                        <div className="studies__table-title-text" title={r.title}>
+                          {r.title || ''}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <div className="studies__table-authors" title={r.authors}>
+                        {r.authors || ''}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-      )}
-
-      {query && !loading && !err && (
-        <div className='flex items-center justify-between border-t p-3 text-sm'>
-          <div>Total <b>{sorted.length}</b> records, page <b>{page}</b>/<b>{totalPages}</b></div>
-          <div className='flex items-center gap-2'>
-            <button disabled={page <= 1} onClick={() => setPage(1)} className='rounded-lg border px-2 py-1 disabled:opacity-40'>⏮</button>
-            <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className='rounded-lg border px-2 py-1 disabled:opacity-40'>Previous</button>
-            <button disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} className='rounded-lg border px-2 py-1 disabled:opacity-40'>Next</button>
-            <button disabled={page >= totalPages} onClick={() => setPage(totalPages)} className='rounded-lg border px-2 py-1 disabled:opacity-40'>⏭</button>
-          </div>
-        </div>
+        </>
       )}
     </div>
   )
